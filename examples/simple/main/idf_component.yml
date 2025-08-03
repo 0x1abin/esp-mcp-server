@@ -1,0 +1,7 @@
+## IDF Component Manager Manifest File
+dependencies:
+  protocol_examples_common:
+    path: ${IDF_PATH}/examples/common_components/protocol_examples_common
+  esp_mcp_server:
+    version: "~0.0.1"
+    override_path: "../../.."

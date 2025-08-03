@@ -1,0 +1,14 @@
+idf_component_register(
+    SRCS
+        "src/esp_mcp_server.c"
+        "src/json_rpc.c"
+        "src/uri_template.c"
+    INCLUDE_DIRS
+        "include"
+    PRIV_INCLUDE_DIRS
+        "src/priv_includes"
+    REQUIRES
+        esp_http_server
+        json
+        esp_timer
+)

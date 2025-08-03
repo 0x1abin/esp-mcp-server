@@ -1,0 +1,8 @@
+version: "0.0.1"
+description: "esp_mcp_server component"
+url: "https://github.com/0x1abin/esp-mcp-server"
+documentation: "https://github.com/0x1abin/esp-mcp-server/blob/main/README.md"
+repository: "https://github.com/0x1abin/esp-mcp-server.git"
+dependencies:
+  idf:
+    version: ">=5.0"
