@@ -753,27 +753,6 @@ esp_err_t esp_mcp_server_register_resource(esp_mcp_server_handle_t server_handle
     return ESP_OK;
 }
 
-esp_err_t esp_mcp_server_unregister_tool(esp_mcp_server_handle_t server_handle, const char *tool_name) {
-    if (!server_handle || !tool_name) {
-        ESP_LOGE(TAG, "Invalid arguments");
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    // TODO: Implement tool unregistration
-    ESP_LOGW(TAG, "Tool unregistration not yet implemented");
-    return ESP_ERR_NOT_SUPPORTED;
-}
-
-esp_err_t esp_mcp_server_unregister_resource(esp_mcp_server_handle_t server_handle, const char *resource_name) {
-    if (!server_handle || !resource_name) {
-        ESP_LOGE(TAG, "Invalid arguments");
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    // TODO: Implement resource unregistration
-    ESP_LOGW(TAG, "Resource unregistration not yet implemented");
-    return ESP_ERR_NOT_SUPPORTED;
-}
 
 esp_err_t esp_mcp_server_get_stats(esp_mcp_server_handle_t server_handle,
                                    uint16_t *active_sessions,

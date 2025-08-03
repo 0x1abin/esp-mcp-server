@@ -259,24 +259,6 @@ esp_err_t esp_mcp_server_register_tool(esp_mcp_server_handle_t server_handle, co
 esp_err_t esp_mcp_server_register_resource(esp_mcp_server_handle_t server_handle, const esp_mcp_resource_config_t *resource_config);
 
 /**
- * @brief Unregister a tool from the MCP server
- *
- * @param server_handle Server handle
- * @param tool_name Tool name to unregister
- * @return ESP_OK on success, ESP_ERR_NOT_FOUND if tool not found
- */
-esp_err_t esp_mcp_server_unregister_tool(esp_mcp_server_handle_t server_handle, const char *tool_name);
-
-/**
- * @brief Unregister a resource from the MCP server
- *
- * @param server_handle Server handle
- * @param resource_name Resource name to unregister
- * @return ESP_OK on success, ESP_ERR_NOT_FOUND if resource not found
- */
-esp_err_t esp_mcp_server_unregister_resource(esp_mcp_server_handle_t server_handle, const char *resource_name);
-
-/**
  * @brief Get server statistics
  *
  * @param server_handle Server handle
