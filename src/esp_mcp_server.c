@@ -23,6 +23,7 @@ static const char *TAG = "ESP_MCP_SERVER";
 typedef struct {
     httpd_handle_t http_server;
     esp_mcp_server_config_t config;
+    bool is_running;                     // Server running state
 
     // Registered tools and resources
     struct {
@@ -490,7 +491,7 @@ static esp_err_t expand_resource_array(mcp_server_ctx_t *ctx) {
 }
 
 // Public API implementations
-esp_err_t esp_mcp_server_start(const esp_mcp_server_config_t *config, esp_mcp_server_handle_t *server_handle) {
+esp_err_t esp_mcp_server_init(const esp_mcp_server_config_t *config, esp_mcp_server_handle_t *server_handle) {
     if (!config || !server_handle) {
         ESP_LOGE(TAG, "Invalid arguments");
         return ESP_ERR_INVALID_ARG;
@@ -532,43 +533,16 @@ esp_err_t esp_mcp_server_start(const esp_mcp_server_config_t *config, esp_mcp_se
         return ESP_ERR_NO_MEM;
     }
 
-    // Start HTTP server
-    httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
-    server_config.server_port = config->port;
-    server_config.max_uri_handlers = 8;
-
-    esp_err_t ret = httpd_start(&ctx->http_server, &server_config);
-    if (ret != ESP_OK) {
-        free(ctx->resources);
-        free(ctx->tools);
-        free(ctx);
-        ESP_LOGE(TAG, "Failed to start HTTP server: %s", esp_err_to_name(ret));
-        return ret;
-    }
-
-    // Register URI handlers
-    httpd_uri_t mcp_post_uri = {
-        .uri = "/mcp",
-        .method = HTTP_POST,
-        .handler = mcp_post_handler,
-        .user_ctx = ctx
-    };
-    httpd_register_uri_handler(ctx->http_server, &mcp_post_uri);
-
-    httpd_uri_t mcp_options_uri = {
-        .uri = "/mcp",
-        .method = HTTP_OPTIONS,
-        .handler = mcp_options_handler,
-        .user_ctx = ctx
-    };
-    httpd_register_uri_handler(ctx->http_server, &mcp_options_uri);
+    // Initialize server state
+    ctx->http_server = NULL;
+    ctx->is_running = false;
 
     *server_handle = (esp_mcp_server_handle_t)ctx;
-    ESP_LOGI(TAG, "MCP Server started successfully on port %d", config->port);
+    ESP_LOGI(TAG, "MCP Server initialized successfully");
     return ESP_OK;
 }
 
-esp_err_t esp_mcp_server_stop(esp_mcp_server_handle_t server_handle) {
+esp_err_t esp_mcp_server_deinit(esp_mcp_server_handle_t server_handle) {
     if (!server_handle) {
         ESP_LOGE(TAG, "Invalid server handle");
         return ESP_ERR_INVALID_ARG;
@@ -576,12 +550,9 @@ esp_err_t esp_mcp_server_stop(esp_mcp_server_handle_t server_handle) {
 
     mcp_server_ctx_t *ctx = (mcp_server_ctx_t *)server_handle;
 
-    // Stop HTTP server
-    if (ctx->http_server) {
-        esp_err_t ret = httpd_stop(ctx->http_server);
-        if (ret != ESP_OK) {
-            ESP_LOGW(TAG, "Failed to stop HTTP server: %s", esp_err_to_name(ret));
-        }
+    // Stop server if it's running
+    if (ctx->is_running) {
+        esp_mcp_server_stop(server_handle);
     }
 
     // Cleanup tools
@@ -614,6 +585,79 @@ esp_err_t esp_mcp_server_stop(esp_mcp_server_handle_t server_handle) {
     }
 
     free(ctx);
+    ESP_LOGI(TAG, "MCP Server stopped successfully");
+    return ESP_OK;
+}
+
+esp_err_t esp_mcp_server_start(esp_mcp_server_handle_t server_handle) {
+    if (!server_handle) {
+        ESP_LOGE(TAG, "Invalid server handle");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    mcp_server_ctx_t *ctx = (mcp_server_ctx_t *)server_handle;
+
+    if (ctx->is_running) {
+        ESP_LOGW(TAG, "MCP Server is already running");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Start HTTP server
+    httpd_config_t server_config = HTTPD_DEFAULT_CONFIG();
+    server_config.server_port = ctx->config.port;
+    server_config.max_uri_handlers = 8;
+
+    esp_err_t ret = httpd_start(&ctx->http_server, &server_config);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to start HTTP server: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    // Register URI handlers
+    httpd_uri_t mcp_post_uri = {
+        .uri = "/mcp",
+        .method = HTTP_POST,
+        .handler = mcp_post_handler,
+        .user_ctx = ctx
+    };
+    httpd_register_uri_handler(ctx->http_server, &mcp_post_uri);
+
+    httpd_uri_t mcp_options_uri = {
+        .uri = "/mcp",
+        .method = HTTP_OPTIONS,
+        .handler = mcp_options_handler,
+        .user_ctx = ctx
+    };
+    httpd_register_uri_handler(ctx->http_server, &mcp_options_uri);
+
+    ctx->is_running = true;
+    ESP_LOGI(TAG, "MCP Server started successfully on port %d", ctx->config.port);
+    return ESP_OK;
+}
+
+esp_err_t esp_mcp_server_stop(esp_mcp_server_handle_t server_handle) {
+    if (!server_handle) {
+        ESP_LOGE(TAG, "Invalid server handle");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    mcp_server_ctx_t *ctx = (mcp_server_ctx_t *)server_handle;
+
+    if (!ctx->is_running) {
+        ESP_LOGW(TAG, "MCP Server is not running");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Stop HTTP server
+    if (ctx->http_server) {
+        esp_err_t ret = httpd_stop(ctx->http_server);
+        if (ret != ESP_OK) {
+            ESP_LOGW(TAG, "Failed to stop HTTP server: %s", esp_err_to_name(ret));
+        }
+        ctx->http_server = NULL;
+    }
+
+    ctx->is_running = false;
     ESP_LOGI(TAG, "MCP Server stopped successfully");
     return ESP_OK;
 }

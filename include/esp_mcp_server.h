@@ -4,6 +4,36 @@
  *
  * This component provides a high-level API for creating MCP servers on ESP32.
  * It supports dynamic registration of tools and resources with simple callback functions.
+ *
+ * ## Usage Flow
+ *
+ * 1. Initialize server: esp_mcp_server_init()
+ * 2. Register tools: esp_mcp_server_register_tool()
+ * 3. Register resources: esp_mcp_server_register_resource()
+ * 4. Start HTTP server: esp_mcp_server_start()
+ * 5. Server is now ready to accept MCP requests
+ * 6. Stop server: esp_mcp_server_stop() (optional, can restart later)
+ * 7. Cleanup: esp_mcp_server_deinit()
+ *
+ * @code
+ * esp_mcp_server_handle_t server;
+ * esp_mcp_server_config_t config = ESP_MCP_SERVER_DEFAULT_CONFIG();
+ * 
+ * // Initialize server
+ * ESP_ERROR_CHECK(esp_mcp_server_init(&config, &server));
+ * 
+ * // Register tools and resources
+ * esp_mcp_tool_config_t tool = { ... };
+ * ESP_ERROR_CHECK(esp_mcp_server_register_tool(server, &tool));
+ * 
+ * // Start HTTP server
+ * ESP_ERROR_CHECK(esp_mcp_server_start(server));
+ * 
+ * // Server is now running...
+ * 
+ * // Cleanup
+ * ESP_ERROR_CHECK(esp_mcp_server_deinit(server));
+ * @endcode
  */
 
 #pragma once
@@ -90,19 +120,48 @@ typedef struct {
 }
 
 /**
- * @brief Initialize and start MCP server
+ * @brief Initialize MCP server (does not start HTTP server)
+ *
+ * This function initializes the MCP server context and prepares it for tool/resource registration.
+ * The HTTP server is not started until esp_mcp_server_start() is called.
  *
  * @param config Server configuration
  * @param server_handle Output handle for the created server
  * @return ESP_OK on success, error code otherwise
  */
-esp_err_t esp_mcp_server_start(const esp_mcp_server_config_t *config, esp_mcp_server_handle_t *server_handle);
+esp_err_t esp_mcp_server_init(const esp_mcp_server_config_t *config, esp_mcp_server_handle_t *server_handle);
 
 /**
  * @brief Stop and cleanup MCP server
  *
+ * This function stops the HTTP server (if running) and frees all allocated resources.
+ * It automatically calls esp_mcp_server_stop() if the server is running.
+ *
  * @param server_handle Server handle
  * @return ESP_OK on success, error code otherwise
+ */
+esp_err_t esp_mcp_server_deinit(esp_mcp_server_handle_t server_handle);
+
+/**
+ * @brief Start MCP server HTTP service
+ *
+ * This function starts the HTTP server and begins accepting MCP requests.
+ * The server must be initialized with esp_mcp_server_init() first.
+ * Tools and resources should be registered before starting the server.
+ *
+ * @param server_handle Server handle
+ * @return ESP_OK on success, ESP_ERR_INVALID_STATE if already running, error code otherwise
+ */
+esp_err_t esp_mcp_server_start(esp_mcp_server_handle_t server_handle);
+
+/**
+ * @brief Stop MCP server HTTP service
+ *
+ * This function stops the HTTP server but keeps the server context intact.
+ * The server can be restarted with esp_mcp_server_start() after stopping.
+ *
+ * @param server_handle Server handle
+ * @return ESP_OK on success, ESP_ERR_INVALID_STATE if not running, error code otherwise
  */
 esp_err_t esp_mcp_server_stop(esp_mcp_server_handle_t server_handle);
 

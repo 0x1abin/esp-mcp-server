@@ -393,16 +393,19 @@ void app_main(void) {
      */
     ESP_ERROR_CHECK(example_connect());
 
-    // Configure and start MCP server
+    // Configure and initialize MCP server
     esp_mcp_server_config_t server_config = ESP_MCP_SERVER_DEFAULT_CONFIG();
     server_config.port = 80;
     server_config.server_name = "ESP32 Component Example";
     server_config.server_version = "1.0.0";
 
-    ESP_ERROR_CHECK(esp_mcp_server_start(&server_config, &mcp_server));
+    ESP_ERROR_CHECK(esp_mcp_server_init(&server_config, &mcp_server));
 
     // Register custom tools and resources
     register_custom_tools_and_resources();
+
+    // Start the MCP server
+    ESP_ERROR_CHECK(esp_mcp_server_start(mcp_server));
 
     // Print server statistics
     uint16_t active_sessions, total_tools, total_resources;
