@@ -275,7 +275,6 @@ static void register_custom_tools_and_resources(void) {
 
     esp_mcp_tool_config_t echo_tool = {
         .name = "echo",
-        .title = "Echo Tool",
         .description = "Echoes back the provided message",
         .input_schema = echo_schema,
         .handler = echo_tool_handler,
@@ -311,7 +310,6 @@ static void register_custom_tools_and_resources(void) {
 
     esp_mcp_tool_config_t gpio_tool = {
         .name = "gpio_control",
-        .title = "GPIO Control",
         .description = "Control GPIO pins on ESP32",
         .input_schema = gpio_schema,
         .handler = gpio_control_handler,
@@ -331,7 +329,6 @@ static void register_custom_tools_and_resources(void) {
 
     esp_mcp_tool_config_t adc_tool = {
         .name = "adc_read",
-        .title = "ADC Read",
         .description = "Read ADC channel value",
         .input_schema = adc_schema,
         .handler = adc_read_handler,
@@ -348,7 +345,6 @@ static void register_custom_tools_and_resources(void) {
     esp_mcp_resource_config_t echo_resource = {
         .uri_template = "echo://{message}",
         .name = "echo",
-        .title = "Echo Resource",
         .description = "Echoes back messages as resources",
         .mime_type = "text/plain",
         .handler = echo_resource_handler,
@@ -364,7 +360,6 @@ static void register_custom_tools_and_resources(void) {
     esp_mcp_resource_config_t sensor_resource = {
         .uri_template = "esp32://sensors/data",
         .name = "sensor_data",
-        .title = "Sensor Data",
         .description = "Current sensor readings from ESP32",
         .mime_type = "text/plain",
         .handler = sensor_data_handler,
