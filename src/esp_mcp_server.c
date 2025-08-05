@@ -180,10 +180,8 @@ static cJSON* handle_initialized(const cJSON *params, const cJSON *id, void *use
 static cJSON* handle_ping(const cJSON *params, const cJSON *id, void *user_data) {
     ESP_LOGI(TAG, "Ping request");
 
+    // According to MCP specification, ping should return an empty object
     cJSON *result = cJSON_CreateObject();
-    if (result) {
-        cJSON_AddStringToObject(result, "status", "pong");
-    }
     return result;
 }
 
