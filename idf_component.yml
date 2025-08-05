@@ -5,8 +5,7 @@ documentation: "https://github.com/0x1abin/esp-mcp-server/blob/main/README.md"
 repository: "https://github.com/0x1abin/esp-mcp-server.git"
 license: "MIT"
 maintainers:
-  - name: "0x1abin"
-    email: "0x1abin@gmail.com"
+  - "0x1abin <0x1abin@gmail.com>"
 keywords:
   - "mcp"
   - "model-context-protocol"
@@ -25,5 +24,3 @@ targets:
 dependencies:
   idf:
     version: ">=5.0"
-  espressif/json:
-    version: "*"

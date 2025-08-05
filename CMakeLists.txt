@@ -10,6 +10,6 @@ idf_component_register(
         "src/priv_includes"
     REQUIRES
         esp_http_server
-        json
         esp_timer
+        json
 )
