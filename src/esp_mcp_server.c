@@ -726,7 +726,7 @@ esp_err_t esp_mcp_server_register_tool(esp_mcp_server_handle_t server_handle, co
     ctx->tools[idx].name = strdup(tool_config->name);
     ctx->tools[idx].title = tool_config->title ? strdup(tool_config->title) : NULL;
     ctx->tools[idx].description = tool_config->description ? strdup(tool_config->description) : NULL;
-    ctx->tools[idx].input_schema = tool_config->input_schema ? cJSON_Duplicate(tool_config->input_schema, 1) : NULL;
+    ctx->tools[idx].input_schema = tool_config->input_schema;
     ctx->tools[idx].handler = tool_config->handler;
     ctx->tools[idx].user_data = tool_config->user_data;
 

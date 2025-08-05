@@ -277,7 +277,6 @@ static void register_custom_tools_and_resources(void) {
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register echo tool: %s", esp_err_to_name(ret));
     }
-    cJSON_Delete(echo_schema);
 
     // Register GPIO control tool with schema validation
     cJSON *gpio_schema = schema_builder_create_object();
@@ -296,7 +295,6 @@ static void register_custom_tools_and_resources(void) {
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register GPIO control tool: %s", esp_err_to_name(ret));
     }
-    cJSON_Delete(gpio_schema);
 
     // Register ADC read tool with optional parameters
     cJSON *adc_schema = schema_builder_create_object();
@@ -314,7 +312,6 @@ static void register_custom_tools_and_resources(void) {
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register ADC read tool: %s", esp_err_to_name(ret));
     }
-    cJSON_Delete(adc_schema);
 
     // Register echo resource
     esp_mcp_resource_config_t echo_resource = {
