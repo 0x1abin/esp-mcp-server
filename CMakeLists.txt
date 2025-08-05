@@ -3,6 +3,7 @@ idf_component_register(
         "src/esp_mcp_server.c"
         "src/json_rpc.c"
         "src/uri_template.c"
+        "src/schema_validator.c"
     INCLUDE_DIRS
         "include"
     PRIV_INCLUDE_DIRS

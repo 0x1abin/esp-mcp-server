@@ -197,7 +197,27 @@ char* jsonrpc_process_message(const char *json_str, const jsonrpc_method_t *meth
 
     if (msg.type == JSONRPC_REQUEST) {
         if (result) {
-            response = jsonrpc_create_response(msg.id, result);
+            // Check if the result is actually an error indicator
+            cJSON *error_type = cJSON_GetObjectItem(result, "_jsonrpc_error");
+            if (error_type && cJSON_IsString(error_type)) {
+                // Handle special error types
+                int error_code = JSONRPC_INTERNAL_ERROR;
+                const char *default_message = "Internal error";
+
+                if (strcmp(error_type->valuestring, "invalid_params") == 0) {
+                    error_code = JSONRPC_INVALID_PARAMS;
+                    default_message = "Invalid params";
+                }
+
+                cJSON *message = cJSON_GetObjectItem(result, "message");
+                cJSON *data = cJSON_GetObjectItem(result, "data");
+
+                response = jsonrpc_create_error(msg.id, error_code,
+                    message && cJSON_IsString(message) ? message->valuestring : default_message,
+                    data);
+            } else {
+                response = jsonrpc_create_response(msg.id, result);
+            }
             cJSON_Delete(result);
         } else {
             response = jsonrpc_create_error(msg.id, JSONRPC_INTERNAL_ERROR, "Internal error", NULL);

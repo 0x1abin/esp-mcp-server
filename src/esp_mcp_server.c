@@ -255,6 +255,38 @@ static cJSON* handle_call_tool(const cJSON *params, const cJSON *id, void *user_
         for (size_t i = 0; i < ctx->tool_count; i++) {
             if (strcmp(ctx->tools[i].name, name->valuestring) == 0) {
                 if (ctx->tools[i].handler) {
+                    // Validate arguments against input schema if provided
+                    if (ctx->tools[i].input_schema) {
+                        schema_validation_result_t validation_result;
+                        esp_err_t ret = schema_validate_tool_arguments(arguments, ctx->tools[i].input_schema, &validation_result);
+
+                        if (ret != ESP_OK || validation_result.error != SCHEMA_VALIDATION_OK) {
+                            ESP_LOGW(TAG, "Tool '%s' argument validation failed: %s",
+                                    ctx->tools[i].name, validation_result.error_message);
+
+                            // Create error data with validation details
+                            cJSON *error_data = cJSON_CreateObject();
+                            if (error_data) {
+                                cJSON_AddStringToObject(error_data, "tool", ctx->tools[i].name);
+                                cJSON_AddStringToObject(error_data, "details", validation_result.error_message);
+                                if (validation_result.error_path) {
+                                    cJSON_AddStringToObject(error_data, "path", validation_result.error_path);
+                                }
+                            }
+
+                            // This will be handled by JSON-RPC layer with proper error code
+                            cJSON *error_result = cJSON_CreateObject();
+                            if (error_result) {
+                                cJSON_AddStringToObject(error_result, "_jsonrpc_error", "invalid_params");
+                                cJSON_AddStringToObject(error_result, "message", "Invalid tool arguments");
+                                if (error_data) {
+                                    cJSON_AddItemToObject(error_result, "data", error_data);
+                                }
+                            }
+                            return error_result;
+                        }
+                    }
+
                     return ctx->tools[i].handler(arguments, ctx->tools[i].user_data);
                 }
             }

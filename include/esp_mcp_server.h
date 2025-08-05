@@ -18,19 +18,19 @@
  * @code
  * esp_mcp_server_handle_t server;
  * esp_mcp_server_config_t config = ESP_MCP_SERVER_DEFAULT_CONFIG();
- * 
+ *
  * // Initialize server
  * ESP_ERROR_CHECK(esp_mcp_server_init(&config, &server));
- * 
+ *
  * // Register tools and resources
  * esp_mcp_tool_config_t tool = { ... };
  * ESP_ERROR_CHECK(esp_mcp_server_register_tool(server, &tool));
- * 
+ *
  * // Start HTTP server
  * ESP_ERROR_CHECK(esp_mcp_server_start(server));
- * 
+ *
  * // Server is now running...
- * 
+ *
  * // Cleanup
  * ESP_ERROR_CHECK(esp_mcp_server_deinit(server));
  * @endcode
@@ -42,6 +42,7 @@
 #include <stdbool.h>
 #include "esp_err.h"
 #include "cJSON.h"
+#include "schema_validator.h"
 
 #ifdef __cplusplus
 extern "C" {

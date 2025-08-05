@@ -20,9 +20,9 @@
 #include "driver/gpio.h"
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
-#include "esp_mcp_server.h"
-
 #include "protocol_examples_common.h"
+#include "esp_mcp_server.h"
+#include "schema_validator.h"
 
 static const char *TAG = "MCP_EXAMPLE";
 
@@ -94,14 +94,15 @@ static void hardware_init(void) {
 
 /**
  * @brief Echo tool handler - echoes back the provided message
+ *
+ * @note Parameter validation is handled by the SDK layer using the input_schema.
+ *       The handler can safely assume all required parameters are present and valid.
  */
 static cJSON* echo_tool_handler(const cJSON *arguments, void *user_data) {
     ESP_LOGI(TAG, "Echo tool called");
 
+    // SDK layer guarantees 'message' parameter is present and is a string
     cJSON *message = cJSON_GetObjectItem(arguments, "message");
-    if (!message || !cJSON_IsString(message)) {
-        return NULL;
-    }
 
     cJSON *result = cJSON_CreateObject();
     cJSON *content_array = cJSON_CreateArray();
@@ -122,10 +123,14 @@ static cJSON* echo_tool_handler(const cJSON *arguments, void *user_data) {
 
 /**
  * @brief GPIO control tool handler - controls LED GPIO
+ *
+ * @note Parameter validation is handled by the SDK layer using the input_schema.
+ *       The handler can safely assume 'pin' is a valid integer and 'state' is a valid boolean.
  */
 static cJSON* gpio_control_handler(const cJSON *arguments, void *user_data) {
     ESP_LOGI(TAG, "GPIO control tool called");
 
+    // SDK layer guarantees parameters are present and have correct types
     cJSON *pin = cJSON_GetObjectItem(arguments, "pin");
     cJSON *state = cJSON_GetObjectItem(arguments, "state");
 
@@ -134,22 +139,18 @@ static cJSON* gpio_control_handler(const cJSON *arguments, void *user_data) {
     cJSON *content = cJSON_CreateObject();
     cJSON_AddStringToObject(content, "type", "text");
 
-    if (pin && cJSON_IsNumber(pin) && state && cJSON_IsBool(state)) {
-        int gpio_num = pin->valueint;
-        bool gpio_state = cJSON_IsTrue(state);
+    int gpio_num = pin->valueint;
+    bool gpio_state = cJSON_IsTrue(state);
 
-        if (gpio_num == EXAMPLE_LED_GPIO) {
-            gpio_set_level(gpio_num, gpio_state ? 1 : 0);
+    if (gpio_num == EXAMPLE_LED_GPIO) {
+        gpio_set_level(gpio_num, gpio_state ? 1 : 0);
 
-            char response[100];
-            snprintf(response, sizeof(response), "GPIO %d set to %s",
-                    gpio_num, gpio_state ? "HIGH" : "LOW");
-            cJSON_AddStringToObject(content, "text", response);
-        } else {
-            cJSON_AddStringToObject(content, "text", "Invalid GPIO pin. Only LED GPIO is supported.");
-        }
+        char response[100];
+        snprintf(response, sizeof(response), "GPIO %d set to %s",
+                gpio_num, gpio_state ? "HIGH" : "LOW");
+        cJSON_AddStringToObject(content, "text", response);
     } else {
-        cJSON_AddStringToObject(content, "text", "Invalid arguments. Expected: pin (number), state (boolean)");
+        cJSON_AddStringToObject(content, "text", "Invalid GPIO pin. Only LED GPIO is supported.");
     }
 
     cJSON_AddItemToArray(content_array, content);
@@ -260,18 +261,9 @@ static char* sensor_data_handler(const char *uri, void *user_data) {
 static void register_custom_tools_and_resources(void) {
     esp_err_t ret;
 
-    // Register echo tool
-    cJSON *echo_schema = cJSON_CreateObject();
-    cJSON_AddStringToObject(echo_schema, "type", "object");
-    cJSON *echo_properties = cJSON_CreateObject();
-    cJSON *message_prop = cJSON_CreateObject();
-    cJSON_AddStringToObject(message_prop, "type", "string");
-    cJSON_AddStringToObject(message_prop, "description", "Message to echo");
-    cJSON_AddItemToObject(echo_properties, "message", message_prop);
-    cJSON_AddItemToObject(echo_schema, "properties", echo_properties);
-    cJSON *echo_required = cJSON_CreateArray();
-    cJSON_AddItemToArray(echo_required, cJSON_CreateString("message"));
-    cJSON_AddItemToObject(echo_schema, "required", echo_required);
+    // Register echo tool with schema validation
+    cJSON *echo_schema = schema_builder_create_object();
+    schema_builder_add_string(echo_schema, "message", "Message to echo", true);
 
     esp_mcp_tool_config_t echo_tool = {
         .name = "echo",
@@ -287,26 +279,10 @@ static void register_custom_tools_and_resources(void) {
     }
     cJSON_Delete(echo_schema);
 
-    // Register GPIO control tool
-    cJSON *gpio_schema = cJSON_CreateObject();
-    cJSON_AddStringToObject(gpio_schema, "type", "object");
-    cJSON *gpio_properties = cJSON_CreateObject();
-
-    cJSON *pin_prop = cJSON_CreateObject();
-    cJSON_AddStringToObject(pin_prop, "type", "integer");
-    cJSON_AddStringToObject(pin_prop, "description", "GPIO pin number");
-    cJSON_AddItemToObject(gpio_properties, "pin", pin_prop);
-
-    cJSON *state_prop = cJSON_CreateObject();
-    cJSON_AddStringToObject(state_prop, "type", "boolean");
-    cJSON_AddStringToObject(state_prop, "description", "GPIO state (true=HIGH, false=LOW)");
-    cJSON_AddItemToObject(gpio_properties, "state", state_prop);
-
-    cJSON_AddItemToObject(gpio_schema, "properties", gpio_properties);
-    cJSON *gpio_required = cJSON_CreateArray();
-    cJSON_AddItemToArray(gpio_required, cJSON_CreateString("pin"));
-    cJSON_AddItemToArray(gpio_required, cJSON_CreateString("state"));
-    cJSON_AddItemToObject(gpio_schema, "required", gpio_required);
+    // Register GPIO control tool with schema validation
+    cJSON *gpio_schema = schema_builder_create_object();
+    schema_builder_add_integer(gpio_schema, "pin", "GPIO pin number", 0, 48, true);
+    schema_builder_add_boolean(gpio_schema, "state", "GPIO state (true=HIGH, false=LOW)", true);
 
     esp_mcp_tool_config_t gpio_tool = {
         .name = "gpio_control",
@@ -322,10 +298,9 @@ static void register_custom_tools_and_resources(void) {
     }
     cJSON_Delete(gpio_schema);
 
-    // Register ADC read tool
-    cJSON *adc_schema = cJSON_CreateObject();
-    cJSON_AddStringToObject(adc_schema, "type", "object");
-    cJSON_AddItemToObject(adc_schema, "properties", cJSON_CreateObject());
+    // Register ADC read tool with optional parameters
+    cJSON *adc_schema = schema_builder_create_object();
+    schema_builder_add_integer(adc_schema, "channel", "ADC channel (optional)", 0, 7, false);
 
     esp_mcp_tool_config_t adc_tool = {
         .name = "adc_read",
