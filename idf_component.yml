@@ -1,8 +1,29 @@
 version: "0.0.1"
-description: "ESP32 MCP Server SDK Component"
+description: "ESP32 Model Context Protocol (MCP) Server SDK - Standardized AI tool integration for ESP32"
 url: "https://github.com/0x1abin/esp-mcp-server"
 documentation: "https://github.com/0x1abin/esp-mcp-server/blob/main/README.md"
 repository: "https://github.com/0x1abin/esp-mcp-server.git"
+license: "MIT"
+maintainers:
+  - name: "0x1abin"
+    email: "0x1abin@gmail.com"
+keywords:
+  - "mcp"
+  - "model-context-protocol"
+  - "ai"
+  - "llm"
+  - "tools"
+  - "json-rpc"
+  - "schema-validation"
+targets:
+  - esp32
+  - esp32s2
+  - esp32s3
+  - esp32c3
+  - esp32c6
+  - esp32h2
 dependencies:
   idf:
     version: ">=5.0"
+  espressif/json:
+    version: "*"

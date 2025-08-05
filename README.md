@@ -1,6 +1,33 @@
 # ESP32 MCP Server Component
 
+[![Component Registry](https://components.espressif.com/components/0x1abin/esp_mcp_server/badge.svg)](https://components.espressif.com/components/0x1abin/esp_mcp_server)
+
+An ESP32 component that implements the Model Context Protocol (MCP) server, providing a simple API to create custom MCP servers with dynamic tool and resource registration.
+
 这是一个 ESP32 的 MCP (Model Context Protocol) 服务器组件，提供简洁的 API 来创建自定义的 MCP 服务器，支持动态注册工具和资源。
+
+## Installation
+
+### Using ESP Component Registry
+
+```bash
+idf.py add-dependency "0x1abin/esp_mcp_server"
+```
+
+### Manual Installation
+
+1. Clone this repository into your project's `components` directory:
+```bash
+cd your_project/components
+git clone https://github.com/0x1abin/esp-mcp-server.git esp_mcp_server
+```
+
+2. Add the component to your main component's dependencies in `idf_component.yml`:
+```yaml
+dependencies:
+  esp_mcp_server:
+    path: ../components/esp_mcp_server
+```
 
 ## 特性
 
